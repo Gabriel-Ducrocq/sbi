@@ -1,0 +1,29 @@
+device: "cpu"
+layers:
+  layer1:
+    linear:
+      in_dim: 7
+      out_dim: 100
+    activation: "leakyRelu"
+  layer2:
+    dropout: 0.0
+    linear:
+      in_dim: 100
+      out_dim: 70
+    activation: "leakyRelu"
+  layer3:
+    dropout: 0.0
+    linear:
+      in_dim: 70
+      out_dim: 40
+    activation: "leakyRelu"
+  layer4:
+    dropout: 0.0
+    linear:
+      in_dim: 40
+      out_dim: 3
+
+
+
+
+
