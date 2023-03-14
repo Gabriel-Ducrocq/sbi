@@ -2,7 +2,7 @@ device: "cpu"
 layers:
   layer1:
     linear:
-      in_dim: 3
+      in_dim: 2
       out_dim: 40
     activation: "leakyRelu"
   layer2:

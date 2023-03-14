@@ -30,8 +30,8 @@ def compute_prior(theta):
     return 0
 
 def compute_likelihood(theta, observed_data):
-    log_first_mode = -1/2*(observed_data - theta) - 1/2 * np.log(2*np.pi) - 1/2 * np.log(1)
-    log_second_mode = -1/2*(observed_data - theta)/0.01 - 1/2 * np.log(2*np.pi) - 1/2 * np.log(0.01)
+    log_first_mode = -1/2*(observed_data - theta)**2 - 1/2 * np.log(2*np.pi) - 1/2 * np.log(1)
+    log_second_mode = -1/2*(observed_data - theta)**2/0.01 - 1/2 * np.log(2*np.pi) - 1/2 * np.log(0.01)
     return 0.5*np.exp(log_first_mode) + 0.5*np.exp(log_second_mode)
 
 
@@ -91,8 +91,10 @@ data_test = dataset.Dataset(dataset_sampled_test.parameters, dataset_sampled_tes
                              sampled_times=sampled_times_test)
 
 
-true_param = prior()
-observed_data = likelihood(true_param)
+#true_param = prior()
+#true_param = 0.5
+#observed_data = likelihood(true_param)
+observed_data = np.ones((1,))*0.1
 
 
 
@@ -123,8 +125,14 @@ sampled_posterior = np.array(sampled_posterior)
 
 low = np.min(sampled_posterior)
 high = np.max(sampled_posterior)
+
+low = np.min(sorted_params[:10000, 0])
+low = - 5
+high = np.max(sorted_params[:10000, 0])
+high = 5
 xx = np.linspace(low, high, 10000)
-y = np.array([compute_prior(x)*compute_likelihood(x, observed_data) for x in xx])
+y = np.array([compute_prior(x)*compute_likelihood(x, observed_data)/compute_partition_function(observed_data) for x in xx])
+#y = np.array([compute_likelihood(x, observed_data) for x in xx])
 plt.hist(sampled_posterior[:, -1, 0], bins=40, density=True, alpha=0.5)
 plt.hist(sorted_params[:10000, 0], bins=40, density=True, alpha=0.5)
 plt.plot(xx, y)

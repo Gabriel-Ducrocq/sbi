@@ -71,7 +71,7 @@ class Diffusion:
 
     def sample_marginal(self, x_0, x_tau, t, tau, n_sample):
         """
-        Sample a variable fron the marginal distribution of X_t given X_0 and X_tau, for 0 < t < tau
+        Sample a variable from the marginal distribution of X_t given X_0 and X_tau, for 0 < t < tau
         :param t: float
         :return: np.array(n_sample, dim_process)
         """
