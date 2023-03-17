@@ -4,23 +4,27 @@ import matplotlib.pyplot as plt
 
 
 class MixtureBrownianBridges:
-    def __init__(self, T=1, sigma=1, dim_process=1):
+    def __init__(self, times=None, dim_process=1, a = 3, b = 3):
         """
 
         :param T: float, Time horizon
         :param sigma: float, diffusion coefficient
         """
-        self.T = T
-        self.sigma = sigma
-        self.sigma_torch = torch.tensor(self.sigma, dtype=torch.float32)
+        self.T = None
+        if times:
+            self.T = times
+
         self.dim_process = dim_process
+        self.a = a
+        self.b = b
 
 
     def diffusion_coeff(self, t):
-        return 3*np.exp(-3*t)
+        return self.a*np.exp(-self.b*t)
 
     def beta_t(self, t):
-        return - 5/2 * (np.exp(-2*1*t) - 1)
+        return - self.a**2/(2*self.b) * (np.exp(-2*self.b*t) - 1)
+
 
     def sample_marginal(self, x_0, x_T, t, T, n_sample):
         """
@@ -28,13 +32,12 @@ class MixtureBrownianBridges:
         :param t: float
         :return: np.array(n_sample, dim_process)
         """
-        avg = x_0 + t/T*(x_T - x_0)
-        std = (T - t)*t/T
-        #samples = np.random.normal(size=n_sample)*std*self.sigma + avg
-        samples = np.random.normal(size=n_sample)*std*self.diffusion_coeff(t)+ avg
+        avg = x_0 * (self.beta_t(T) - self.beta_t(t))/(self.beta_t(T) - self.beta_t(0)) + x_T* self.beta_t(t)/self.beta_t(T)
+        variance = (self.beta_t(T) - self.beta_t(t))/self.beta_t(T) * self.beta_t(t)
+        samples = np.random.normal(size=n_sample) * np.sqrt(variance) + avg
         return np.transpose(samples)
 
-    def compute_drift_maruyama(self, x_t, t, tau, network):
+    def compute_drift_maruyama(self, x_t, t, tau, distrib_number, network):
         """
         Computing the drift part of the SDE
         :param x_t:
@@ -42,11 +45,13 @@ class MixtureBrownianBridges:
         :param network:
         :return:
         """
-        approximate_expectation = network.forward(torch.concat([x_t, t], dim=-1))
+        input = torch.concat([x_t, t, distrib_number], dim=-1)
+        input = input.to(dtype=torch.float32)
+        approximate_expectation = network.forward(input)
         drift = (approximate_expectation - x_t)/(self.beta_t(tau) - self.beta_t(t)) * self.diffusion_coeff(t)**2
         return drift
 
-    def euler_maruyama(self, x_0, times, tau, network):
+    def euler_maruyama(self, x_0, times, tau, distrib_number, network):
         """
 
         :param x_0: torch.tensor(1, dim_process), starting point of the Euler-Maruyama scheme
@@ -61,7 +66,7 @@ class MixtureBrownianBridges:
         trajectories = []
         trajectories.append(x_t.detach().numpy()[0, :])
         for i, t in enumerate(times):
-            drift = self.compute_drift_maruyama(x_t=x_t, t=t_old, tau=tau, network=network)
+            drift = self.compute_drift_maruyama(x_t=x_t, t=t_old, tau=tau, distrib_number=distrib_number, network=network)
             ##Check transposition here
             x_t_new = x_t + drift * (t - t_old) + np.sqrt((t - t_old)) * torch.randn((1, self.dim_process))*self.diffusion_coeff(t)
 
@@ -69,7 +74,7 @@ class MixtureBrownianBridges:
             trajectories.append(x_t.detach().numpy()[0, :])
             t_old = t
 
-        return np.array(trajectories)
+        return np.array(trajectories), x_t
 
 
 
