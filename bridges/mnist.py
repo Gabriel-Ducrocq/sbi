@@ -1,5 +1,6 @@
+import numpy as np
 import torch
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import scipy as sp
 from bridges.brownianBridge import MixtureBrownianBridges
 from collections import OrderedDict
@@ -10,7 +11,6 @@ from torchvision import transforms
 import mlp
 import trainer
 from bridges.dataset import Dataset
-
 
 def sample_perturbed_data(x0, xT, size, sampled_times, T=1):
     perturbed_samples = torch.empty((SIZE_training, 28 * 28))
@@ -33,7 +33,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("DEVICE:", device)
 SIZE_training = 60000
 SIZE_test = 10000
-batch_size = 1000
+batch_size = 600
 mnist_dataset = torchvision.datasets.MNIST("../datasets/", download=True, transform= transforms.ToTensor())
 full_data_loader = DataLoader(mnist_dataset, batch_size=SIZE_training, shuffle=True)
 full_data_load_iter = iter(full_data_loader)
@@ -59,14 +59,27 @@ x0_test = torch.zeros((SIZE_test, 28*28))
 perturbed_samples_test = sample_perturbed_data(x0_test, full_dataset_test, SIZE_test, sampled_times_test, 1)
 final_dataset_test = Dataset(full_dataset_test, perturbed_samples_test, sampled_times_test)
 
-argmin = torch.argmin(sampled_times)
-plt.imshow(torch.reshape(perturbed_samples[argmin, :], (28, 28)), cmap="gray")
-plt.show()
+#argmin = torch.argmin(sampled_times)
+#plt.imshow(torch.reshape(perturbed_samples[argmin, :], (28, 28)), cmap="gray")
+#plt.show()
 
-argmax = torch.argmax(sampled_times)
-plt.imshow(torch.reshape(perturbed_samples[argmax, :], (28, 28)), cmap="gray")
-plt.show()
+#argmax = torch.argmax(sampled_times)
+#plt.imshow(torch.reshape(perturbed_samples[argmax, :], (28, 28)), cmap="gray")
+#plt.show()
 perceptron = mlp.MLP("../mlp_mixture.yaml")
 train = trainer.Trainer(final_dataset, final_dataset_test)
-all_losses, losses_last = train.train(perceptron, batch_size=batch_size,  n_epochs=50, lr=0.0003)
+all_losses, losses_last = train.train(perceptron, batch_size=batch_size,  n_epochs=100, lr=0.0003)
 
+brownianBridge = MixtureBrownianBridges()
+network = torch.load("full_model")
+time_grid = torch.tensor(np.linspace(0, 1, 1000)[1:], dtype=torch.float32)[:, None, None]
+all_samples = []
+for i in range(10):
+    print(i)
+    traj, sample = brownianBridge.euler_maruyama(torch.zeros((1, 28*28)), time_grid, 1, network)
+    all_samples.append(sample)
+
+for i in range(10):
+    samp = all_samples[i]
+    #plt.imshow(torch.reshape(samp, (28, 28)).detach().numpy(), cmap="gray")
+    #plt.show()

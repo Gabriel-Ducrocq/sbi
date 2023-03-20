@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 
 class MixtureBrownianBridges:
-    def __init__(self, times=None, dim_process=28*28, a = 1, b = 5):
+    def __init__(self, times=None, dim_process=28*28, a = 3, b = 3):
         """
 
         :param T: float, Time horizon
@@ -51,7 +51,7 @@ class MixtureBrownianBridges:
         drift = (approximate_expectation - x_t)/(self.beta_t(tau) - self.beta_t(t)) * self.diffusion_coeff(t)**2
         return drift
 
-    def euler_maruyama(self, x_0, times, tau, distrib_number, network):
+    def euler_maruyama(self, x_0, times, tau, network):
         """
 
         :param x_0: torch.tensor(1, dim_process), starting point of the Euler-Maruyama scheme
@@ -62,17 +62,17 @@ class MixtureBrownianBridges:
         :return: torch.tensor(1, dim_process), point approximately simulated according to the posterior distribution.
         """
         x_t = x_0
-        t_old = torch.zeros((1,1), dtype=torch.float32)
+        t = torch.zeros((1,1), dtype=torch.float32)
         trajectories = []
         trajectories.append(x_t.detach().numpy()[0, :])
-        for i, t in enumerate(times):
-            drift = self.compute_drift_maruyama(x_t=x_t, t=t_old, tau=tau, network=network)
+        for i, t_new in enumerate(times):
+            drift = self.compute_drift_maruyama(x_t=x_t, t=t, tau=tau, network=network)
             ##Check transposition here
-            x_t_new = x_t + drift * (t - t_old) + np.sqrt((t - t_old)) * torch.randn((1, self.dim_process))*self.diffusion_coeff(t)
+            x_t_new = x_t + drift * (t_new - t) + np.sqrt((t_new - t)) * torch.randn((1, self.dim_process))*self.diffusion_coeff(t)
 
             x_t = x_t_new
             trajectories.append(x_t.detach().numpy()[0, :])
-            t_old = t
+            t = t_new
 
         return np.array(trajectories), x_t
 
