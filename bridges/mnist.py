@@ -30,6 +30,7 @@ def sample_perturbed_data(x0, xT, size, sampled_times, T=1):
     return perturbed_samples
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("DEVICE:", device)
 SIZE_training = 60000
 SIZE_test = 10000
 batch_size = 1000
