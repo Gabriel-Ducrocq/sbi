@@ -37,7 +37,7 @@ class MixtureBrownianBridges:
         samples = torch.randn(size=(n_sample, self.dim_process)) * np.sqrt(variance) + avg
         return samples
 
-    def compute_drift_maruyama(self, x_t, t, tau, distrib_number, network):
+    def compute_drift_maruyama(self, x_t, t, tau, network):
         """
         Computing the drift part of the SDE
         :param x_t:
@@ -45,7 +45,7 @@ class MixtureBrownianBridges:
         :param network:
         :return:
         """
-        input = torch.concat([x_t, t, distrib_number], dim=-1)
+        input = torch.concat([x_t, t], dim=-1)
         input = input.to(dtype=torch.float32)
         approximate_expectation = network.forward(input)
         drift = (approximate_expectation - x_t)/(self.beta_t(tau) - self.beta_t(t)) * self.diffusion_coeff(t)**2
@@ -66,7 +66,7 @@ class MixtureBrownianBridges:
         trajectories = []
         trajectories.append(x_t.detach().numpy()[0, :])
         for i, t in enumerate(times):
-            drift = self.compute_drift_maruyama(x_t=x_t, t=t_old, tau=tau, distrib_number=distrib_number, network=network)
+            drift = self.compute_drift_maruyama(x_t=x_t, t=t_old, tau=tau, network=network)
             ##Check transposition here
             x_t_new = x_t + drift * (t - t_old) + np.sqrt((t - t_old)) * torch.randn((1, self.dim_process))*self.diffusion_coeff(t)
 

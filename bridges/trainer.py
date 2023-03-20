@@ -68,6 +68,7 @@ class Trainer:
             x = torch.concat([batch_perturbed_data_test, batch_times_test], dim=-1)
             predicted_data_test = network.forward(x)
             loss_test = self.compute_msd(predicted_data_test, batch_data_test)
+            torch.save(network, "full_model")
             """
             batch_data_train_test, batch_perturbed_data_train_test, batch_times_train_test, batch_distrib_number_train_test = next(data_loader_train_test)
             x = torch.concat([batch_perturbed_data_train_test, batch_times_train_test, batch_distrib_number_train_test], dim=-1)

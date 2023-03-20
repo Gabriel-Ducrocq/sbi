@@ -1,4 +1,4 @@
-device: "cpu"
+device: "cuda"
 layers:
   layer1:
     linear:

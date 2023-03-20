@@ -4,15 +4,16 @@ from torch.utils.data import Dataset as torchDataset
 
 
 class Dataset(torchDataset):
-    def __init__(self, data, perturbed_data=None, sampled_times=None, distrib_number=None):
-        self.data = torch.tensor(data, dtype=torch.float32)
+    def __init__(self, data, perturbed_data=None, sampled_times=None, distrib_number=None, device="cpu"):
+        self.device = device
+        self.data = torch.tensor(data, dtype=torch.float32).to(device)
         self.sampled_times = None
         self.distrib_number = None
         if perturbed_data is not None:
-            self.perturbed_data = torch.tensor(data, dtype=torch.float32)
-            self.sampled_times = torch.tensor(sampled_times, dtype=torch.float32)
+            self.perturbed_data = torch.tensor(data, dtype=torch.float32).to(device)
+            self.sampled_times = torch.tensor(sampled_times, dtype=torch.float32).to(device)
             if distrib_number is not None:
-                self.distrib_number = torch.tensor(distrib_number, dtype=torch.float32)
+                self.distrib_number = torch.tensor(distrib_number, dtype=torch.float32).to(device)
 
     def __len__(self):
         return len(self.data)

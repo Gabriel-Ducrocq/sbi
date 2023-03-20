@@ -29,7 +29,7 @@ def sample_perturbed_data(x0, xT, size, sampled_times, T=1):
 
     return perturbed_samples
 
-
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 SIZE_training = 60000
 SIZE_test = 10000
 batch_size = 1000
@@ -40,7 +40,7 @@ full_dataset, _ = next(full_data_load_iter)
 full_dataset = torch.flatten(full_dataset[:, 0, :, :], start_dim=-2, end_dim=-1)
 
 mnist_dataset_test = torchvision.datasets.MNIST("../datasets/", download=True, transform= transforms.ToTensor(), train=False)
-full_data_loader_test = DataLoader(mnist_dataset_test, batch_size=10000, shuffle=True)
+full_data_loader_test = DataLoader(mnist_dataset_test, batch_size=10000, shuffle=False)
 full_data_load_test_iter = iter(full_data_loader_test)
 full_dataset_test, _ = next(full_data_load_test_iter)
 full_dataset_test = torch.flatten(full_dataset_test[:, 0, :, :], start_dim=-2, end_dim=-1)
@@ -67,5 +67,5 @@ plt.imshow(torch.reshape(perturbed_samples[argmax, :], (28, 28)), cmap="gray")
 plt.show()
 perceptron = mlp.MLP("../mlp_mixture.yaml")
 train = trainer.Trainer(final_dataset, final_dataset_test)
-all_losses, losses_last = train.train(perceptron, batch_size=batch_size,  n_epochs=500, lr=0.0003)
+all_losses, losses_last = train.train(perceptron, batch_size=batch_size,  n_epochs=50, lr=0.0003)
 
