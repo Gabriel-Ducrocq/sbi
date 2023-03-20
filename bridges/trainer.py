@@ -5,13 +5,13 @@ from torch.utils.data import DataLoader
 
 
 class Trainer:
-    def __init__(self, dataset, dataset_test):
+    def __init__(self, dataset, dataset_test, size_train=60000, size_test=10000):
         self.dataset = dataset
         self.dataset_test = dataset_test
-        self.size_data_set = len(dataset["sampled_x_t"])
-        self.size_data_set_test = len(dataset_test["sampled_x_t"])
-        self.complete_dataset_train = self.build_dataset(self.dataset)
-        self.complete_dataset_test = self.build_dataset(self.dataset_test)
+        self.size_data_set = size_train
+        self.size_data_set_test = size_test
+        #self.complete_dataset_train = self.build_dataset(self.dataset)
+        #self.complete_dataset_test = self.build_dataset(self.dataset_test)
 
     def build_dataset(self, dataset):
         ending_points = dataset["ending_point"]
@@ -28,10 +28,12 @@ class Trainer:
         optimizer = torch.optim.Adam(network.parameters(), lr=lr)
         all_losses_test = []
         assert self.size_data_set % batch_size == 0, "Batch size not a divider of dataset size"
-        data_loader_test = iter(DataLoader(self.complete_dataset_test, batch_size=self.size_data_set_test, shuffle=False))
+        data_loader_test = iter(DataLoader(self.dataset, batch_size=self.size_data_set_test, shuffle=False))
 
-        batch_data, batch_perturbed_data, batch_times, batch_distrib_number = next(data_loader_test)
-        x = torch.concat([batch_perturbed_data, batch_times, batch_distrib_number], dim=-1)
+        #batch_data, batch_perturbed_data, batch_times, batch_distrib_number = next(data_loader_test)
+        batch_data, batch_perturbed_data, batch_times = next(data_loader_test)
+        #x = torch.concat([batch_perturbed_data, batch_times, batch_distrib_number], dim=-1)
+        x = torch.concat([batch_perturbed_data, batch_times], dim=-1)
         predicted_data = network.forward(x)
         loss_test = self.compute_msd(predicted_data, batch_data)
 
@@ -40,13 +42,15 @@ class Trainer:
         for epoch in range(n_epochs):
             all_losses = []
             print("Epoch:", epoch)
-            data_loader = iter(DataLoader(self.complete_dataset_train, batch_size=batch_size, shuffle=True))
-            data_loader_test = iter(DataLoader(self.complete_dataset_test, batch_size=self.size_data_set_test, shuffle=False))
-            data_loader_train_test = iter(DataLoader(self.complete_dataset_train, batch_size=100000, shuffle=False))
+            data_loader = iter(DataLoader(self.dataset, batch_size=batch_size, shuffle=True))
+            data_loader_test = iter(DataLoader(self.dataset_test, batch_size=self.size_data_set_test, shuffle=False))
+            data_loader_train_test = iter(DataLoader(self.dataset, batch_size=100000, shuffle=False))
             for i in range(int(self.size_data_set/batch_size)):
-                batch_data, batch_perturbed_data, batch_times, batch_distrib_number = next(data_loader)
+                #batch_data, batch_perturbed_data, batch_times, batch_distrib_number = next(data_loader)
+                batch_data, batch_perturbed_data, batch_times = next(data_loader)
                 #print("train_data", batch_data)
-                x = torch.concat([batch_perturbed_data, batch_times, batch_distrib_number], dim=-1)
+                #x = torch.concat([batch_perturbed_data, batch_times, batch_distrib_number], dim=-1)
+                x = torch.concat([batch_perturbed_data, batch_times], dim=-1)
                 predicted_data = network.forward(x)
                 loss = self.compute_msd(predicted_data, batch_data)
                 optimizer.zero_grad()
@@ -58,8 +62,10 @@ class Trainer:
                 #print(batch_perturbed_parameters[0, :])
                 #print("\n")
 
-            batch_data_test, batch_perturbed_data_test, batch_times_test, batch_distrib_number_test = next(data_loader_test)
-            x = torch.concat([batch_perturbed_data_test, batch_times_test, batch_distrib_number_test], dim=-1)
+            #batch_data_test, batch_perturbed_data_test, batch_times_test, batch_distrib_number_test = next(data_loader_test)
+            batch_data_test, batch_perturbed_data_test, batch_times_test = next(data_loader_test)
+            #x = torch.concat([batch_perturbed_data_test, batch_times_test, batch_distrib_number_test], dim=-1)
+            x = torch.concat([batch_perturbed_data_test, batch_times_test], dim=-1)
             predicted_data_test = network.forward(x)
             loss_test = self.compute_msd(predicted_data_test, batch_data_test)
             """

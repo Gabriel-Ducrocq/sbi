@@ -9,6 +9,18 @@ import scipy as sp
 from bridges.brownianBridge import MixtureBrownianBridges
 from collections import OrderedDict
 from bridges.utils import get_dataset
+import torchvision
+from torch.utils.data import DataLoader
+from torchvision import transforms
+
+
+mnist_dataset = torchvision.datasets.MNIST("../datasets/", download=True, transform= transforms.ToTensor())
+data_loader = DataLoader(mnist_dataset, batch_size=4,shuffle=True)
+data_load = iter(data_loader)
+for im in data_load:
+    print(im[1])
+    plt.imshow(im[0][0, 0].to(torch.float32), cmap="gray")
+    plt.show()
 
 SIZE_training = 100000
 SIZE_test = 1000
@@ -20,25 +32,26 @@ def likelihood(mu1, mu2):
 
     return np.random.normal(size=(1,)) + mu
 
-def compute_likelihood(theta, mu1, mu2):
-    log_first_mode = -1/2*(mu1 - theta)**2 - 1/2 * np.log(2*np.pi) - 1/2 * np.log(1)
-    log_second_mode = -1/2*(mu2 - theta)**2/1 - 1/2 * np.log(2*np.pi) - 1/2 * np.log(1)
-    return 0.5*np.exp(log_first_mode) + 0.5*np.exp(log_second_mode)
+#def compute_likelihood(theta, mu1, mu2):
+#    log_first_mode = -1/2*(mu1 - theta)**2 - 1/2 * np.log(2*np.pi) - 1/2 * np.log(1)
+#    log_second_mode = -1/2*(mu2 - theta)**2/1 - 1/2 * np.log(2*np.pi) - 1/2 * np.log(1)
+#    return 0.5*np.exp(log_first_mode) + 0.5*np.exp(log_second_mode)
 
 
-def compute_partition_function(mu1, mu2):
-    first_mode = 1/40 * (sp.stats.norm.cdf(10, loc=mu1, scale=1) - sp.stats.norm.cdf(-10, loc=mu1, scale=1))
-    second_mode = 1/40 * (sp.stats.norm.cdf(10, loc=mu2, scale=np.sqrt(1)) - sp.stats.norm.cdf(-10, loc=mu2, scale=np.sqrt(1)))
-    return first_mode + second_mode
+#def compute_partition_function(mu1, mu2):
+#    first_mode = 1/40 * (sp.stats.norm.cdf(10, loc=mu1, scale=1) - sp.stats.norm.cdf(-10, loc=mu1, scale=1))
+#    second_mode = 1/40 * (sp.stats.norm.cdf(10, loc=mu2, scale=np.sqrt(1)) - sp.stats.norm.cdf(-10, loc=mu2, scale=np.sqrt(1)))
+#    return first_mode + second_mode
 
 
 #distributions = {"distrib0":{"t":0, "mu1":0, "mu2":0},"distrib1":{"t":0.5, "mu1":-5, "mu2":-5,"steps":500},
 #                 "distrib2":{"t":1, "mu1":-10, "mu2":-10, "steps":500}}
 
-distributions = {"distrib0":{"t":0, "mu1":0, "mu2":0},"distrib1":{"t":1, "mu1":-2, "mu2":-2,"steps":1000}}
+distributions = {"distrib0":{"t":0, "mu1":0, "mu2":0},"distrib1":{"t":0.1, "mu1":0, "mu2":0,"steps":1000}}
+
 datasets = {distrib:np.array([likelihood(params["mu1"], params["mu2"]) for _ in range(SIZE_training)])
             for distrib, params in distributions.items()}
-datasets["sampled_times"] = np.random.uniform(size=SIZE_training)
+datasets["sampled_times"] = np.random.uniform(size=SIZE_training)*0.1
 
 final_dataset = get_dataset(distributions, datasets)
 brownianBridge = MixtureBrownianBridges()
@@ -61,7 +74,7 @@ final_dataset["sampled_x_t"] = sampled_x_t
 dataset_test = {distrib:np.array([likelihood(params["mu1"], params["mu2"]) for _ in range(SIZE_test)])
             for distrib, params in distributions.items()}
 
-dataset_test["sampled_times"] = np.random.uniform(size=SIZE_test)
+dataset_test["sampled_times"] = np.random.uniform(size=SIZE_test)*0.1
 
 final_dataset_test = get_dataset(distributions, dataset_test)
 print(final_dataset["distribution_number"])
@@ -86,7 +99,7 @@ final_dataset_test["sampled_x_t"] = sampled_x_t_test
 #plt.show()
 perceptron = mlp.MLP("mlp_mixture.yaml")
 train = trainer.Trainer(final_dataset, final_dataset_test)
-all_losses, losses_last = train.train(perceptron, batch_size=batch_size,  n_epochs=50, lr=0.0003)
+all_losses, losses_last = train.train(perceptron, batch_size=batch_size,  n_epochs=100, lr=0.0003)
 
 #plt.plot(all_losses)
 #plt.show()

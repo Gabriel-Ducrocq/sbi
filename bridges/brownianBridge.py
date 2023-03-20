@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 
 class MixtureBrownianBridges:
-    def __init__(self, times=None, dim_process=1, a = 3, b = 3):
+    def __init__(self, times=None, dim_process=28*28, a = 1, b = 5):
         """
 
         :param T: float, Time horizon
@@ -34,8 +34,8 @@ class MixtureBrownianBridges:
         """
         avg = x_0 * (self.beta_t(T) - self.beta_t(t))/(self.beta_t(T) - self.beta_t(0)) + x_T* self.beta_t(t)/self.beta_t(T)
         variance = (self.beta_t(T) - self.beta_t(t))/self.beta_t(T) * self.beta_t(t)
-        samples = np.random.normal(size=n_sample) * np.sqrt(variance) + avg
-        return np.transpose(samples)
+        samples = torch.randn(size=(n_sample, self.dim_process)) * np.sqrt(variance) + avg
+        return samples
 
     def compute_drift_maruyama(self, x_t, t, tau, distrib_number, network):
         """

@@ -26,6 +26,7 @@ def get_dataset(distributions, datasets):
     distrib_number = []
     for i, all_data_t in enumerate(all_datasets):
         starting_points.append(all_data_t[belongings[i]-1])
+        print(i)
         ending_points.append(all_data_t[belongings[i]])
         sampled_time_difference.append(datasets["sampled_times"][i] - times[belongings[i-1]])
         distrib_number.append(belongings[i])
