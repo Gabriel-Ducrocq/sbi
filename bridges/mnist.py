@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 #import matplotlib.pyplot as plt
-import scipy as sp
+#import scipy as sp
 from bridges.brownianBridge import MixtureBrownianBridges
 from collections import OrderedDict
 from bridges.utils import get_dataset
